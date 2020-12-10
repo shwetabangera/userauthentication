@@ -3,25 +3,40 @@ const path = require("path");
 const User = require("../models/userModels");
 const fileName = path.join(__dirname, "--", "data", "users.json");
 const users = JSON.parse(fs.readFileSync(fileName, "utf-8"));
+
 const checkRequestBody = (req, res, next) => {
-  let validationArray = ["email", "password", "confirmPassword"];
+  let validationArray;
+  switch(req.url){
+    case "/users/signup":
+      validationArray=["email","password","confirmPassword"];
+      break;
+      case "/users/login":
+      validationArray=["email","password"];
+      break;
+  }
+
   let result = validationArray.every((key) => {
     return req.body[key] && req.body[key].trim().length;
   });
   if (!result) {
-    return res.send("Invalid body");
+   // return res.send("Invalid body");
     return sendErrorMessage(
-      new AppError(400, "Unsuccessful", "Invalid Request")
+      new AppError(400, "Unsuccessful", "Invalid Request Body"),req,res,
     );
   }
   next();
 };
 const isEmailValid = (req, res, next) => {
+function validateEmail(email) {
+  const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return re.test(email)==req.body.email;
+}
+
   next();
 };
 const checkConfirmPassword = (req, res, next) => {
   if (!req.body.password == req.body.confirmPassword) {
-    return res.send("Confirm password and password dont match");
+    return res.sendErrorMessage("Confirm password and password dont match");
   }
   next();
 };
